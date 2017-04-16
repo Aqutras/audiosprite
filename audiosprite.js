@@ -161,10 +161,13 @@ module.exports = function(files) {
 
   function exportFile(src, dest, ext, opt, store, cb) {
     var outfile = dest + '.' + ext
+    var consoleOutput = ''
+    opts.logger.info('command : ffmpeg -y -ar ' + opts.samplerate + ' -ac ' + opts.channels + ' -f s16le -i' + src);
     spawn('ffmpeg',['-y', '-ar', opts.samplerate, '-ac', opts.channels, '-f', 's16le', '-i', src]
-        .concat(opt).concat(outfile))
+      .concat(opt).concat(outfile))
       .on('exit', function(code, signal) {
         if (code) {
+          opts.logger.info(consoleOutput)
           return cb({
             msg: 'Error exporting file',
             format: ext,
@@ -187,6 +190,9 @@ module.exports = function(files) {
           }
           cb()
         }
+      })
+     .stderr.on('data', function(data) {
+        consoleOutput += data
       })
   }
 
@@ -264,9 +270,11 @@ module.exports = function(files) {
         appendFile(name, tmp, tempFile, function(err) {
           if (rawparts != null ? rawparts.length : void 0) {
           async.forEachSeries(rawparts, function(ext, cb) {
-            opts.logger.debug('Start export slice', { name: name, format: ext, i: i })
-            exportFile(tmp, opts.output + '_' + pad(i, 3), ext, formats[ext]
-              , false, cb)
+            if (typeof file !== 'undefined') {
+              opts.logger.debug('Start export slice', { name: name, format: ext, i: i })
+              exportFile(tmp, opts.output + '_' + pad(i, 3), ext, formats[ext]
+                , false, cb)
+              }
             }, tempProcessed)
           } else {
             tempProcessed()
