@@ -137,9 +137,10 @@ if (argv.help || !files.length) {
 }
 
 audiosprite(files, opts, function(err, obj) {
+  console.log(obj)
   if (err) {
     winston.error(err)
-    process.exit(0)
+    process.exit(1)
   }
   var jsonfile = opts.output + '.json'
   fs.writeFileSync(jsonfile, JSON.stringify(obj, null, 2))
